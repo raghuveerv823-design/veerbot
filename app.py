@@ -1,189 +1,124 @@
-"""
-VEERBOT - Cloud Deployment Ready Flask App
-Accessible 24/7 from anywhere without needing laptop running
-Works completely standalone - reads knowledge from botfile.txt
-"""
-
 from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
-import json
 import os
-import uuid
-import re
 from datetime import timedelta
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
-
-# ============================================================================
-# SESSION CONFIGURATION
-# ============================================================================
-app.config['SECRET_KEY'] = 'veerbot-cloud-2026-secret-key'
-app.config['SESSION_PERMANENT'] = True
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'veerbot-cloud-2026-master-key'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+CORS(app)
 
-# ============================================================================
-# CORS - Allow all devices
-# ============================================================================
-CORS(app, resources={r"/*": {
-    "origins": "*",
-    "methods": ["GET", "POST", "OPTIONS"],
-    "allow_headers": ["Content-Type"],
-    "supports_credentials": True
-}})
-
-# ============================================================================
-# BOTFILE DATABASE - Read knowledge from botfile.txt
-# ============================================================================
-BOT_DATABASE = {}
 BOT_FILE = 'botfile.txt'
+UNKNOWN_FILE = 'unknown_questions.txt'
 
-def load_bot_database():
-    """Load Q&A pairs from botfile.txt"""
-    global BOT_DATABASE
-    try:
+# ============================================================================
+# DATA HELPERS
+# ============================================================================
+def load_db():
+    db = {}
+    if os.path.exists(BOT_FILE):
         with open(BOT_FILE, 'r', encoding='utf-8') as f:
             for line in f:
-                line = line.strip()
                 if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.lower().strip()
-                    # Add all keywords for this answer
-                    keywords = [k.strip() for k in key.split('|')]
-                    for kw in keywords:
-                        BOT_DATABASE[kw] = value.strip()
-    except FileNotFoundError:
-        BOT_DATABASE['alert'] = 'Bot Knowledge base not found'
-    except Exception as e:
-        BOT_DATABASE['alert'] = f'Error loading database: {str(e)}'
+                    k, v = line.split(':', 1)
+                    keys = [item.strip().lower() for item in k.split('|')]
+                    for key in keys: db[key] = v.strip()
+    return db
 
-def search_bot_response(question):
-    """Find answer from botfile.txt knowledge base"""
-    question_lower = question.lower().strip()
-    
-    # Direct keyword match
-    if question_lower in BOT_DATABASE:
-        return BOT_DATABASE[question_lower]
-    
-    # Partial keyword match
-    for keyword, answer in BOT_DATABASE.items():
-        if keyword in question_lower:
-            return answer
-    
-    # Word-by-word search
-    words = question_lower.split()
-    for word in words:
-        if word in BOT_DATABASE:
-            return BOT_DATABASE[word]
-    
-    # Default response
-    return "Mujhe ye question samajh nahi aaya. Kripaya college ke counter ya help desk se saraashan le sakte hain."
+def save_to_db(keyword, answer):
+    with open(BOT_FILE, 'a', encoding='utf-8') as f:
+        f.write(f"\n{keyword}:{answer}")
 
-# Load database on startup
-load_bot_database()
+def get_unknown_list():
+    if os.path.exists(UNKNOWN_FILE):
+        with open(UNKNOWN_FILE, 'r', encoding='utf-8') as f:
+            return [line.strip() for line in f if line.strip()]
+    return []
+
+def clear_unknown_file():
+    if os.path.exists(UNKNOWN_FILE):
+        open(UNKNOWN_FILE, 'w').close()
 
 # ============================================================================
-# USER SESSION TRACKING
+# BOT LOGIC
 # ============================================================================
-user_sessions = {}
+@app.route('/api/ask', methods=['POST'])
+def ask():
+    data = request.get_json()
+    user_input = data.get('question', '').strip()
+    db = load_db()
 
-def get_user_session():
-    """Get or create unique session for each user"""
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
-        session.permanent = True
-        user_sessions[session['user_id']] = {
-            'created': str(timedelta()),
-            'questions': 0
-        }
-    return session['user_id']
+    # 1. ADMIN TRIGGER & AUTH
+    if user_input.lower() == 'admin':
+        return jsonify({'answer': "Admin Mode: Username aur Password bhejiye (Format: user:pass)"})
 
-# ============================================================================
-# ROUTES
-# ============================================================================
+    if ':' in user_input and 'veer123' in user_input:
+        parts = user_input.split(':')
+        if parts[0] == 'veer123' and parts[1] == 'veerbot123':
+            session['admin_logged_in'] = True
+            session.pop('unknown_index', None) # Reset unknown pointer
+            return jsonify({'answer': "Welcome Veer!\n1. Add answer to Today's new questions\n2. Update old data\n3. Add new data\n\nKaunsa option chunenge? (Type 1, 2, ya 3)"})
+
+    # 2. ADMIN ACTIONS LOGIC
+    if session.get('admin_logged_in'):
+        # --- Option 1: Unknown Questions Interactive ---
+        if user_input == '1' or session.get('mode') == 'unknown':
+            questions = get_unknown_list()
+            if not questions:
+                session.pop('mode', None)
+                return jsonify({'answer': "Koi bhi naya sawal pending nahi hai. Admin menu: 1, 2, 3"})
+            
+            idx = session.get('unknown_index', 0)
+            session['mode'] = 'unknown'
+
+            # User gave answer for current question
+            if ':' in user_input and session.get('waiting_ans'):
+                kw, ans = user_input.split(':', 1)
+                save_to_db(kw.strip().lower(), ans.strip())
+                idx += 1
+                session['unknown_index'] = idx
+            elif user_input.lower() == 'cut':
+                idx += 1
+                session['unknown_index'] = idx
+
+            if idx < len(questions):
+                session['waiting_ans'] = True
+                return jsonify({'answer': f"Question {idx+1}/{len(questions)}: '{questions[idx]}'\n\nReply karein (keyword:answer) ya skip karne ke liye 'cut' likhein."})
+            else:
+                clear_unknown_file()
+                session.pop('mode', None)
+                session.pop('unknown_index', None)
+                return jsonify({'answer': "Saare questions khatam! File clean kar di gayi hai. Admin menu: 1, 2, 3"})
+
+        # --- Option 2 & 3: Direct Update/Add ---
+        if user_input in ['2', '3']:
+            session['mode'] = 'manual_add'
+            return jsonify({'answer': "Theek hai. Naya data is format mein bhejiye -> keyword:answer"})
+
+        if session.get('mode') == 'manual_add' and ':' in user_input:
+            kw, ans = user_input.split(':', 1)
+            save_to_db(kw.strip().lower(), ans.strip())
+            return jsonify({'answer': f"'{kw}' update ho gaya! Aur add karna hai? (Ya logout likhein)"})
+
+        if user_input.lower() == 'logout':
+            session.clear()
+            return jsonify({'answer': "Admin Logged Out."})
+
+    # 3. NORMAL CHAT LOGIC
+    user_q = user_input.lower()
+    if user_q in db:
+        return jsonify({'answer': db[user_q]})
+    
+    for k, v in db.items():
+        if k in user_q: return jsonify({'answer': v})
+
+    # Log Unknown Question
+    with open(UNKNOWN_FILE, 'a', encoding='utf-8') as f:
+        f.write(f"{user_input}\n")
+    return jsonify({'answer': "Maaf kijiye abhi mujhe iss baare mein koi jaankari nahi hai, main aage aapko update karunga."})
 
 @app.route('/')
-def index():
-    """Serve main HTML page or handle GET queries"""
-    question = request.args.get('question', '')
-    user_id = get_user_session()
-    
-    if question:
-        # Handle bot query
-        answer = search_bot_response(question)
-        if user_id in user_sessions:
-            user_sessions[user_id]['questions'] += 1
-        return jsonify({
-            'status': 'success',
-            'answer': answer,
-            'user_id': user_id
-        })
-    else:
-        # Serve HTML page
-        return render_template('index.html')
-
-@app.route('/api/ask', methods=['POST'])
-def ask_bot():
-    """Handle POST queries"""
-    try:
-        user_id = get_user_session()
-        data = request.get_json()
-        question = data.get('question', '') if data else ''
-        
-        if not question:
-            return jsonify({
-                'status': 'error',
-                'answer': 'Koi question likhiye'
-            }), 400
-        
-        answer = search_bot_response(question)
-        if user_id in user_sessions:
-            user_sessions[user_id]['questions'] += 1
-        
-        return jsonify({
-            'status': 'success',
-            'answer': answer,
-            'user_id': user_id
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'answer': f'Error: {str(e)}'
-        }), 500
-
-@app.route('/api/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'VEERBOT',
-        'version': '2.0'
-    })
-
-@app.route('/api/statistics', methods=['GET'])
-def statistics():
-    """Get bot statistics"""
-    return jsonify({
-        'status': 'success',
-        'total_users': len(user_sessions),
-        'total_questions': sum(u.get('questions', 0) for u in user_sessions.values()),
-        'knowledge_entries': len(BOT_DATABASE)
-    })
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'status': 'error', 'answer': 'Page not found'}), 404
-
-@app.errorhandler(500)
-def server_error(error):
-    return jsonify({'status': 'error', 'answer': 'Server error'}), 500
-
-# ============================================================================
-# MAIN
-# ============================================================================
+def home(): return render_template('index.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
