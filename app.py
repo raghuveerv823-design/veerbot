@@ -121,19 +121,34 @@ def ask():
     # --- NORMAL CHAT LOGIC ---
     user_q = user_input.lower()
     
-    # Keyword match check
+    # 1. Admin Options Logic
+    if user_q == "admin":
+        res = ("Admin Mode Active! Please choose an option:\n"
+               "1. Add answer to Today's new question\n"
+               "2. Update old data\n"
+               "3. Add new data")
+        return jsonify({'answer': res})
+
+    # 2. Holiday/Leave Logic (Chutti ke liye)
+    holiday_keywords = ["holiday", "chutti", "leave"]
+    if any(word in user_q for word in holiday_keywords):
+        res = "Bot: Aaj chutti ki jaankari ke liye admin se sampark karein ya 'admin' type karke data update karein."
+        return jsonify({'answer': res})
+
+    # 3. Database Search (Purana Logic)
     if user_q in db:
         return jsonify({'answer': db[user_q]})
-    
+
     for k, v in db.items():
-        if k in user_q: return jsonify({'answer': v})
+        if k in user_q:
+            return jsonify({'answer': v})
 
-    # Unknown Question Logging
+    # 4. Naya Default Message aur Unknown Question Save karna
+    default_res = "Maaf kijiye abhi mujhe iss baare me koi jaankari nahi hai, mai aage aapko update karunga."
     with open(UNKNOWN_FILE, 'a', encoding='utf-8') as f:
-        f.write(f"{user_input}\n")
-    
-    return jsonify({'answer': "Maaf kijiye abhi mujhe iss baare mein koi jaankari nahi hai, main aage aapko update karunga."})
+        f.write(f"{user_q}\n")
 
+    return jsonify({'answer': default_res})
 @app.route('/')
 def home(): return render_template('index.html')
 
