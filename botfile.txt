@@ -1,0 +1,37 @@
+admin_pass:3'#'&%Q%#'2"&9
+super_pass:-(Q$#2#*%'#&
+alert:Welcome to Govt. Autonomous PG College!
+admission|:Admission process online hoti hai, iske liye MP Online portal par register karna hoga.
+fees|shulk:Fees ki jankari counter number 2 se milegi ya fir college website par dekh sakte hain.
+exam|pariksha:Exam form bharne ki date abhi nahi aayi hai, apne department ke notice board ko check karte rahein.
+library:Library se books lene ke liye aapke paas library card hona zaroori hai.
+holiday|chuttiya :College ki chhuttion ki list notice board par laga di gayi hai.
+contact|sampark :College ka official number 07162-XXXXXX hai aur mail id principalpg@gmail.com hai.
+hostel|chhatrawas:Hostel ki suvidha ladkon aur ladkiyon dono ke liye alag-alag uplabdh hai.
+scholarship|chhattravratti:Haa income certificate to lagega hi or documents ke baare me mai abhi college se data collection ki process mai hu.
+bus|travel:College mai Bus subidha apko pradan karayi jaati he govt. ki taraf se free bus seva pradan karayi jaati he. uske koi extra charges nahi hai.
+sports|other activity:Yes College mai extra activity bhi hoti he in sab ki jaankari apko apke class teacher se milegi yaa fr head of the sport counscin se.
+ncc:Yes College mai extra activity bhi hoti he in sab ki jaankari apko apke class teacher se milegi yaa fr head of the sport counscin se.
+canteen:Yes College mai ek canteen bhi hai jiske charges apko pay krne hote he. is canteen mai app monthly passes bhi banwa sakte he.
+idcard kaha se milega:Ye apko counter no. ek se prapt hoga iske liye apko addmission receipt lana mandatory hai . or apki pasport size photo bhi zaruri hai.
+parking:College mai parking ki suvidha uplabdh hai or uske liye apko koi charges nahi dene hote hai.
+placement:Haa college mai placement bhi hoti he companies bhi campus placement ke liye aati hai.
+uniform:Yes College ka apna uniforms code hai apko iski jaankari apne seniors se masani se mil jayegi.
+time:Classes ka Time table apko apne department se mil jayega or department jaise hi updation deta hai mujhe to mai kisi bi subject ki classes ki timing batane me samarth ho paunga. college subhah 8 bje khulta hai or sham ko 4 30 baje band hota hai.
+wifi:Yes College mai Wi or Internet Available hai sath hi computer labs mai ethernet connection bhi available hai. Uska password apko computer lab ke orggniser se mil jyega.
+ragging:Ha pg college mai Anti ragging corp hai or strict rules hai anti ragging ke liye is toll free number par call kar skte hai xxx-xxxx-xxx.
+event:College mai annual function bhi hote he saath hi freshers party bhi organise hoti he or farewell bhi hoti he ye sab Callender ke according organise hote he.
+principal:College ke pricipal ka name Dr. Yugendra Kumar Sharma hai or wo students specially nahi mil payenge uske liye appointment chahiye hoti he.
+recheck:Yes rechecking or revaluation kar form bhar ke app apna exame paper recheck karwa skte he. iske liye apko result ke baad apne class teacher ke contact me rhna hoga uski jankaari wo denge.
+tc:Tc ya migration ke liye apko on-line shankar Shah university ko ek letter sent Krna hota hai uske baad apki gmail me or offline bhi apko tc mil jaati he.
+migration:Tc ya migration ke liye apko on-line shankar Shah university ko ek letter sent Krna hota hai uske baad apki gmail me or offline bhi apko tc mil jaati he.
+syllabus:Apka course konsa hai? Iski jaankari apko apne department se milegi yaha update nahi hua hai.
+book:Agar tum sc st wale ho to tumhe books library mai available ho jayegi otherwise apko books purchase karni hogi.
+result:Iske liye apko college ki website mai jaker result mai click karna hoga apna roll number password dalna hoga or apka result apko show ho jayega.
+leave:Chuttii ke liye tumhe application apne class teacher ko dene hogi.
+lost:Agar apke sath esha kuch hota hai to apko uske liye security room se sampark karna hota hai.
+admitcard:Iski jaankari apko apne class teacher se update Kara di jayegii wait kijiye abhi Admid card release nahi hua hai.2:yes
+exame:yes
+yes:yes
+hello:can i help you 
+hy:hello user can  i help you
